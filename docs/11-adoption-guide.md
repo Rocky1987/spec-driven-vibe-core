@@ -50,6 +50,14 @@
 | `semgrep/anti-reward-hacking.yml` | 掃描 `Skip`、關閉警告等作弊寫法 | 建議 |
 | `.github/CODEOWNERS` | 治理檔變更需人審 | 建議 |
 
+複製後要調整：
+
+- `.github/CODEOWNERS` 裡的 `@Rocky1987` 換成你的帳號或團隊。
+- workflow 的 S1 有一步 `docker compose build`。沒有 `compose.yml` 的專案請刪掉這一步，否則 S1 會失敗。
+- 測試必須放在 `tests/`：目錄名稱寫死在 `scripts/test-lock.mjs` 與 workflow 的 Classify。
+- 專案是 .NET：workflow 與紅燈檢查都用 `dotnet test`。其他語言要自行改寫。
+- 不需要 `quality-gates.yml`：它只被突變測試步驟讀取，而那些步驟沒有 `stryker-config.json` 就不會執行。
+
 分支保護：`main` 設 Required check 為 `Gate Summary`，一律走 PR。
 
 ## 進階（選用）：連 agent 都擋住
