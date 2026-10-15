@@ -10,8 +10,12 @@
 |---|---|---|---|
 | `CLAUDE.md` | [`CLAUDE.project.md`](../templates/CLAUDE.project.md) | AI 憲法：TDD 紅綠燈紀律、鐵律、角色行為 | 行為約束 |
 | `.claude/settings.json` | [連結](../templates/.claude/settings.json) | 共用 Hook、禁止讀取 `.env` 與 Secrets | ① |
-| `.claude/roles/dev.settings.json` | [連結](../templates/.claude/roles/dev.settings.json) | Dev 角色：禁止寫入 `tests/`、`specs/`、驗證面 | ① |
+| `.claude/roles/spec.settings.json` | [連結](../templates/.claude/roles/spec.settings.json) | Spec 角色：只能寫 `specs/`，禁止寫入 `tests/`、`src/`、治理檔 | ① |
+| `.claude/roles/reviewer.settings.json` | [連結](../templates/.claude/roles/reviewer.settings.json) | Reviewer 角色：唯讀，意見寫到 `evidence/spec-reviews/` | ① |
+| `.claude/roles/dev.settings.json` | [連結](../templates/.claude/roles/dev.settings.json) | Dev 角色：禁止寫入 `tests/`、`specs/`、治理檔 | ① |
 | `.claude/roles/qa.settings.json` | [連結](../templates/.claude/roles/qa.settings.json) | QA 角色：禁止寫入 `specs/` 與治理檔；`src/` 僅限骨架（由 S0 強制） | ① |
+| `.claude/agents/spec-agent.md` | [連結](../templates/.claude/agents/spec-agent.md) | Spec Subagent：起草規格，不確定就問 | Context |
+| `.claude/agents/reviewer-agent.md` | [連結](../templates/.claude/agents/reviewer-agent.md) | Reviewer Subagent：挑規格的毛病，與 Spec 用不同模型 | Context |
 | `.claude/agents/qa-agent.md` | [連結](../templates/.claude/agents/qa-agent.md) | QA Subagent：只產出測試，先列規格缺口 | Context |
 | `.claude/agents/dev-agent.md` | [連結](../templates/.claude/agents/dev-agent.md) | Dev Subagent：只改 `src/`，遵守斷路器 | Context |
 | `.claude/hooks/guard-tests.mjs` | [連結](../templates/.claude/hooks/guard-tests.mjs) | 受保護路徑攔截 ＋ `evidence/guard-events.jsonl` 紀錄 | ①②③ |
@@ -28,7 +32,7 @@
 |---|---|
 | 三條鐵律 | 規格是法律、測試是鎖、閘門是裁判 |
 | TDD 紅綠燈紀律 | Red（只寫骨架）→ Green（最小實作）→ Refactor（測試保持全綠）；禁止跳步 |
-| 角色 | 依 `SDV_ROLE` 區分 QA／Dev 的允許與禁止事項 |
+| 角色 | 依 `SDV_ROLE` 區分 Spec／Reviewer／QA／Dev 的允許與禁止事項 |
 | 合法的出口 | 規格缺口、測試異議、卡關時**停止並回報**，寫入 `evidence/`，絕不自行繞過 |
 | 絕對禁止 | 寫死測試值、`Skip`、覆蓋率排除、空 `catch`、`DateTime.Now`、`--no-verify` |
 

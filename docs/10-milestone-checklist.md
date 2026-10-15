@@ -26,6 +26,9 @@
 | [ ] | 0.5a | 紅隊 ①：Edit 與 Bash 繞道改 `tests/` 被攔截 | Hook exit 2 | `evidence/guard-events.jsonl` |
 | [ ] | 0.5b | 紅隊 ②：Agent Session 提交測試變更被 pre-commit 拒絕 | 提交失敗 | `evidence/guardrail-redteam.md` |
 | [ ] | 0.5c | 紅隊 ③：含測試變更的 `dev/*` PR 無法合併 | Classify 失敗 ＋ Lock 不符 | PR 截圖 |
+| [ ] | 0.5d | 紅隊 ④：Spec 角色寫 `tests/`、`src/` 被攔截；Reviewer 角色寫 `specs/`、`tests/`、`src/` 被攔截；QA／Dev 寫 `specs/` 被攔截 | Hook exit 2（`SDV_ROLE=spec\|reviewer\|qa\|dev` 各測一次） | `evidence/guard-events.jsonl` |
+| [ ] | 0.5e | 紅隊 ⑤：`spec/*` PR 含 `tests/` 或 `src/` 變更時 S2 Protected paths 失敗 | CI 失敗 | PR 截圖 |
+| [ ] | 0.5f | 四個角色都能用 `claude --settings .claude/roles/<role>.settings.json` 啟動，且對應 Subagent 可被呼叫 | 各角色啟動並執行一次簡單任務 | 截圖 |
 | [ ] | 0.6 | README 與 Social Preview 上線 | GitHub 首頁顯示正常 | 截圖 |
 | [ ] | 0.7 | 素材 #1–#4（拍攝清單）已捕捉 | [07 §7](07-visual-identity.md) 打勾 | `assets/` |
 | [ ] | 0.8 | 發佈：LinkedIn #1、Threads T1／T2、`v0.1.0` | 貼文連結 | — |
@@ -34,6 +37,7 @@
 
 | ✓ | # | 驗收項目 | 驗證方式 | 證據 |
 |---|---|---|---|---|
+| [ ] | 1.0 | Spec Agent 起草 `price-calculation.feature`，Reviewer Agent 審稿（不同模型），人類核准後合併 `spec/*` PR | Reviewer 意見與修訂紀錄齊全 | `evidence/spec-reviews/` |
 | [ ] | 1.1 | `price-calculation.feature` 定稿，每條規則有 ID | 規格追溯檢查 | — |
 | [ ] | 1.2 | 範例測試、CsCheck 屬性測試與 NotImplemented 空殼產出 | 每條規則 ≥ 1 個測試 | — |
 | [ ] | 1.3 | **S0 Red**：100% 失敗，且原因皆為 `NotImplementedException` | S0 腳本 | 報告 |

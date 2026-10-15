@@ -244,6 +244,11 @@ sequenceDiagram
 **角色啟動方式**（角色設定檔會設定 `SDV_ROLE`，不需手動指定）：
 
 ```bash
+git worktree add ../sdv-spec -b spec/price-calc
+cd ../sdv-spec && claude --settings .claude/roles/spec.settings.json      # 起草規格
+claude --settings .claude/roles/reviewer.settings.json                    # 另開 Session 審稿
+# 人類核准：合併 spec/price-calc 的 PR
+
 git worktree add ../sdv-qa  -b qa/price-calc
 cd ../sdv-qa  && claude --settings .claude/roles/qa.settings.json
 
