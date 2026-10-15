@@ -17,7 +17,7 @@
 
 | ✓ | # | 驗收項目 | 驗證方式 | 證據 |
 |---|---|---|---|---|
-| [ ] | 0.1 | `main` 分支保護：Require status checks（`stage2-guard`），單人模式不勾 approvals | Settings → Branches | 截圖 |
+| [x] | 0.1 | `main` 分支保護：Require status checks（`Gate Summary`，上游失敗時它會跟著失敗），單人模式不勾 approvals | Settings → Rules | 紅隊 PR #2：Gate Summary 標示 Required、合併被擋（截圖） |
 | [x] | 0.2 | 方案可建置 | `dotnet build` 0 警告 | CI 紀錄 |
 | [ ] | 0.3 | `templates/` 已安裝到根目錄，`core.hooksPath` 已設定 | `git config core.hooksPath` 回傳 `.githooks` | — |
 | [x] | 0.4 | CI 三道閘門空殼跑通 | Actions 全綠 | Actions run #1（ccb62e2）全綠，S0 跳過 |
@@ -25,7 +25,7 @@
 | [x] | 0.4b | 方式 B：`scripts/verify-all.mjs` 可在本機與容器內共用；README 指令表與實際一致 | `dotnet run`、`dotnet test`、`node scripts/verify-all.mjs` 皆可執行 | — |
 | [ ] | 0.5a | 紅隊 ①：Edit 與 Bash 繞道改 `tests/` 被攔截 | Hook exit 2 | `evidence/guard-events.jsonl` |
 | [ ] | 0.5b | 紅隊 ②：Agent Session 提交測試變更被 pre-commit 拒絕 | 提交失敗 | `evidence/guardrail-redteam.md` |
-| [ ] | 0.5c | 紅隊 ③：含測試變更的 `dev/*` PR 無法合併 | Classify 失敗 ＋ Lock 不符 | PR 截圖 |
+| [x] | 0.5c | 紅隊 ③：含測試變更的 `dev/*` PR 無法合併 | Classify 失敗 ＋ Lock 不符（Lock 部分待 Phase 1 的 `tests.lock.json`） | PR #2 截圖（Classify ❌、Gate Summary ❌、合併被擋） |
 | [ ] | 0.5d | 紅隊 ④：Spec 角色寫 `tests/`、`src/` 被攔截；Reviewer 角色寫 `specs/`、`tests/`、`src/` 被攔截；QA／Dev 寫 `specs/` 被攔截 | Hook exit 2（`SDV_ROLE=spec\|reviewer\|qa\|dev` 各測一次） | `evidence/guard-events.jsonl` |
 | [ ] | 0.5e | 紅隊 ⑤：`spec/*` PR 含 `tests/` 或 `src/` 變更時 S2 Protected paths 失敗 | CI 失敗 | PR 截圖 |
 | [ ] | 0.5f | 四個角色都能用 `claude --settings .claude/roles/<role>.settings.json` 啟動，且對應 Subagent 可被呼叫 | 各角色啟動並執行一次簡單任務 | 截圖 |
