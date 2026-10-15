@@ -1,0 +1,22 @@
+# 防護層 ③ CI 層：驗證面的任何變更都必須由人類審核。
+# 搭配 Branch Protection：Require review from Code Owners。
+#
+# ⚠️ 單人專案注意：GitHub 不允許 PR 作者核准自己的 PR。
+#    請為 Agent 建立獨立的 GitHub 帳號（例如 sdv-agent-bot）負責推送分支與開 PR，
+#    由你本人以 Code Owner 身分審核。這同時讓「誰寫的程式碼」在 Git 歷史中一目了然。
+#
+# 將 @YOUR_GITHUB_ID 替換為你的帳號或團隊（例如 @org/test-reviewers）。
+
+/specs/                     @YOUR_GITHUB_ID
+/tests/                     @YOUR_GITHUB_ID
+/tests.lock.json            @YOUR_GITHUB_ID
+/quality-gates.yml          @YOUR_GITHUB_ID
+/semgrep/                   @YOUR_GITHUB_ID
+/scripts/test-lock.mjs      @YOUR_GITHUB_ID
+/.github/                   @YOUR_GITHUB_ID
+/.claude/                   @YOUR_GITHUB_ID
+/.githooks/                 @YOUR_GITHUB_ID
+/CLAUDE.md                  @YOUR_GITHUB_ID
+**/stryker-config.json      @YOUR_GITHUB_ID
+**/*.runsettings            @YOUR_GITHUB_ID
+**/Directory.Build.props    @YOUR_GITHUB_ID

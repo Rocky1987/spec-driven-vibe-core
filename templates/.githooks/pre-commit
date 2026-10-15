@@ -1,0 +1,5 @@
+#!/bin/sh
+# 防線 ② 提交層：阻擋 Agent 提交受保護路徑。
+# 規則與 Claude Code Hook 共用同一份（.claude/hooks/guard-tests.mjs），不在此重複定義。
+# 啟用：git config core.hooksPath .githooks
+exec node "$(git rev-parse --show-toplevel)/.claude/hooks/guard-tests.mjs" --staged
