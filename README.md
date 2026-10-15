@@ -51,6 +51,8 @@ flowchart TD
 3. 實作：[`src/FlashSale.Web/Domain/PriceCalculator.cs`](src/FlashSale.Web/Domain/PriceCalculator.cs)，只改 `src/`，56 個測試全過
 4. CI：測試 PR（#9）S0 通過，實作 PR（#11）S1、S2 通過
 
+這個示範只涵蓋計算邏輯（`PriceCalculator`），**還沒有接上網頁**。網頁規則 WEB-001 至 WEB-004 已定稿合併（[`specs/flash-sale/price-web.feature`](specs/flash-sale/price-web.feature)），但對應的測試與實作尚未完成，目前 `src/FlashSale.Web` 只有 MVC 範本骨架。
+
 本機指令：
 
 ```bash
@@ -72,6 +74,8 @@ node scripts/test-lock.mjs verify
 - **CI 一開始沒有檢查「全紅」。** S0 原本只掃描與建置，不跑測試，PR #9 在沒驗紅燈的情況下全綠；後來補上 `scripts/ci/assert-red.mjs` 才真的把關。
 - **同一個 PR 同時改 `tests/` 和 `src/`，目前不會被擋。** 它會被判為測試 PR，只跑 S0，不跑 `dotnet test`。
 - **`quality-gates.yml` 的屬性測試門檻尚未被 CI 執行**，只是設定值。
+- **導入指南尚未在空專案實際重現。** 指南是依 workflow 與腳本推導出來的，複製後要調整的項目（CODEOWNERS、`docker compose build`、`tests/` 目錄名稱、.NET 限定）已列在指南中，但沒有照做驗證過。
+- **網頁功能尚未落地。** 只有規格，沒有測試與實作（見上方示範段落）。
 
 ## 進度
 
