@@ -89,6 +89,9 @@ jobs:
       - name: Coverage gate（依 quality-gates.yml 的等級與路徑比對）
         if: hashFiles('scripts/ci/check-coverage.mjs') != '' # Phase 1
         run: node scripts/ci/check-coverage.mjs coverage
+      - name: Docker build（方式 A 可重現）
+        run: docker compose build
+
 
   # ── 🛡️ S2 · Guard Gate：防竄改 + 測試強度 ─────────────────────────
   stage2-guard:
