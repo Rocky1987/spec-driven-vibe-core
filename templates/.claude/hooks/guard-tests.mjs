@@ -6,7 +6,7 @@
  *   ② 提交層（Git pre-commit）：    node .claude/hooks/guard-tests.mjs --staged
  *   ③ CI 層（檢查 PR 範圍）：       node .claude/hooks/guard-tests.mjs --range origin/main...HEAD
  *
- * 角色由 SDV_ROLE 決定（dev | qa）。
+ * 角色由 SDV_ROLE 決定（spec | reviewer | qa | dev）。
  *   - Hook 模式未設定角色 → 一律視為 dev（Fail-Closed）
  *   - --staged 模式未設定角色 → 在 Claude Code 內（CLAUDECODE=1）視為 dev，否則視為人類並放行
  * 每次攔截都會寫入 evidence/guard-events.jsonl，供統計與社群素材使用。
@@ -19,9 +19,8 @@ const ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const args = process.argv.slice(2);
 const MODE = args.includes('--staged') ? 'staged' : args.includes('--range') ? 'range' : 'hook';
 
-// 驗證面：任何 Agent 都不可修改，只能由人類透過 PR 審核變更
-const VERIFICATION_SURFACE = [
-  [/^specs\//i, 'specs/ 規格只能由人類修改'],
+// 治理檔：任何 Agent 都不可修改，只能由人類透過 PR 審核變更
+const GOVERNANCE = [
   [/^semgrep\//i, 'semgrep/ 反作弊規則'],
   [/^\.github\//i, '.github/ CI 與 CODEOWNERS'],
   [/^\.claude\//i, '.claude/ 角色與 Hook 設定'],
@@ -36,12 +35,18 @@ const VERIFICATION_SURFACE = [
   [/(^|\/)Directory\.Build\.(props|targets)$/i, '全域建置設定（警告即錯誤）'],
 ];
 
+const SPECS = [/^specs\//i, 'specs/ 只有 Spec Agent 可起草，且須經人類核准'];
+const TESTS = [/^tests\//i, 'tests/ 只有 QA Agent 可寫'];
+const SRC = [/^src\//i, 'src/ 只有 Dev Agent 可寫（QA 僅限 NotImplemented 骨架，由 S0 強制）'];
+
 const PROTECTED = {
-  dev: [...VERIFICATION_SURFACE, [/^tests\//i, 'tests/ 對 Dev Agent 唯讀']],
-  qa: VERIFICATION_SURFACE,
+  spec: [...GOVERNANCE, TESTS, SRC], // 只能寫 specs/
+  reviewer: [...GOVERNANCE, SPECS, TESTS, SRC], // 唯讀；意見寫到 evidence/spec-reviews/
+  qa: [...GOVERNANCE, SPECS],
+  dev: [...GOVERNANCE, SPECS, TESTS],
 };
 
-const roleKey = (role) => (role === 'qa' ? 'qa' : 'dev'); // 未知角色一律最嚴格
+const roleKey = (role) => (Object.hasOwn(PROTECTED, role) ? role : 'dev'); // 未知角色一律最嚴格
 
 function toRel(p) {
   if (!p) return null;

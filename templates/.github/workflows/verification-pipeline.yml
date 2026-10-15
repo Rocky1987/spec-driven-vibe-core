@@ -101,10 +101,10 @@ jobs:
         with: { node-version: '22' }
       - name: Test lock（SHA-256 指紋 100% 相符）
         run: node scripts/test-lock.mjs verify
-      - name: Protected paths（Dev 變更不得觸及驗證面）
+      - name: Protected paths（依分支前綴決定角色，變更不得越權）
         if: github.event_name == 'pull_request'
         env:
-          SDV_ROLE: dev
+          SDV_ROLE: ${{ startsWith(github.head_ref, 'spec/') && 'spec' || 'dev' }}
           BASE: ${{ github.base_ref }}
         run: node .claude/hooks/guard-tests.mjs --range "origin/$BASE...HEAD"
       - name: Anti-reward-hacking scan（0 findings）

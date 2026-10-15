@@ -5,7 +5,7 @@
 
 ## 0. 三條鐵律
 
-1. **規格是法律**：`specs/` 只能由人類修改。規格沒寫的行為，就是不存在的行為。
+1. **規格是法律**：`specs/` 由 Spec Agent 起草、人類核准後才生效，其他角色不可修改。規格沒寫的行為，就是不存在的行為。
 2. **測試是鎖**：`tests/` 一經簽核即鎖定（`tests.lock.json`）。測試失敗時，修改的永遠是實作。
 3. **閘門是裁判**：「完成」的唯一定義是三道閘門全綠，而不是 AI 的自我宣告。
 
@@ -15,8 +15,12 @@
 
 | 角色 | 可以寫入 | 不可寫入 | 使用的 Subagent |
 |---|---|---|---|
-| `qa` | `tests/`、`src/`（僅 NotImplemented 骨架） | `specs/`、驗證面、治理檔 | `qa-agent` |
-| `dev` | `src/` | `specs/`、`tests/`、驗證面、治理檔 | `dev-agent` |
+| `spec` | `specs/` | `tests/`、`src/`、治理檔 | `spec-agent` |
+| `reviewer` | `evidence/spec-reviews/`（唯讀審查） | `specs/`、`tests/`、`src/`、治理檔 | `reviewer-agent` |
+| `qa` | `tests/`、`src/`（僅 NotImplemented 骨架） | `specs/`、治理檔 | `qa-agent` |
+| `dev` | `src/` | `specs/`、`tests/`、治理檔 | `dev-agent` |
+
+人類（Approver）核准兩個點：規格定稿（合併 `spec/*` PR）與最終合併。
 
 未設定 `SDV_ROLE` 時一律視為 `dev`。**不得嘗試變更、偽造或繞過角色。**
 
@@ -32,13 +36,14 @@
 
 ## 3. 受保護的驗證面
 
-以下路徑任何 Agent 都不可修改（由 `.claude/hooks/guard-tests.mjs` 強制，並記錄每一次嘗試）：
+以下治理檔任何 Agent 都不可修改（由 `.claude/hooks/guard-tests.mjs` 強制，並記錄每一次嘗試）：
 
 ```text
-specs/  tests.lock.json  quality-gates.yml  semgrep/  .github/  .claude/  .githooks/  CLAUDE.md
+tests.lock.json  quality-gates.yml  semgrep/  .github/  .claude/  .githooks/  CLAUDE.md
 **/stryker-config.json  **/*.runsettings  **/Directory.Build.props
-（dev 角色另外加上）tests/
 ```
+
+另外依角色限制：`specs/` 僅 `spec` 可寫、`tests/` 僅 `qa` 可寫、`src/` 僅 `dev` 可寫（`qa` 限骨架）。
 
 ## 4. 合法的出口
 
