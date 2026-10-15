@@ -19,7 +19,31 @@
 | `specs/flash-sale/price-calculation.feature` | `specs/` | 規格範例 |
 | `.gitattributes` | 根目錄 | Lock 跨平台一致 |
 
-## 安裝
+## 先裝最小版就夠用
+
+不必一次裝完全部。這個套件要防的只有一件事：**AI 為了讓測試通過，去改測試或寫死答案。** 先裝下面三項，就能做到「Dev 角色的 AI 動不了 `tests/`」；其餘等需要時再加。
+
+| 階段 | 範本 | 作用 | 沒有它會怎樣 |
+|---|---|---|---|
+| **最小版** | `CLAUDE.project.md`（合併進 `CLAUDE.md`） | 告訴 AI 不准改測試、不准寫死值 | 只靠 AI 自律 |
+| **最小版** | `.claude/roles/*.settings.json` | 用權限擋住 AI 寫 `tests/` 與 `specs/` | AI 真的改得動測試 |
+| **最小版** | `.claude/settings.json` ＋ `.claude/hooks/guard-tests.mjs` | 擋住用 `sed`、重新導向等方式繞過權限 | 權限設定可被繞過 |
+| 進階 | `.githooks/pre-commit` | 提交時再擋一次 | AI 改了測試仍可 commit |
+| 進階 | `.github/`、`scripts/test-lock.mjs` | CI 比對測試指紋，被改過就失敗；這才是最終裁判 | 前面都只是君子協定 |
+| 進階 | `semgrep/`、Stryker 設定、`quality-gates.yml` | 掃描 `Skip` 與寫死值；用突變測試檢查測試夠不夠強 | 弱測試也會全綠 |
+| 進階 | `.claude/agents/*.md` | 各角色用不同模型與上下文 | 角色分得開，但更容易犯同一個錯 |
+
+最小版安裝：
+
+```bash
+cp -r templates/.claude .
+# 將 templates/CLAUDE.project.md 的內容合併到 CLAUDE.md 最前面
+claude --settings .claude/roles/dev.settings.json
+```
+
+**限制**：只有最小版時，擋得住誠實的 AI，擋不住刻意繞路的；要有完整保證必須加 CI（進階）。
+
+## 完整安裝
 
 ```bash
 # 在專案根目錄執行（Git Bash / macOS / Linux）
