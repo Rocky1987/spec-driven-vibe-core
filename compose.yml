@@ -1,0 +1,10 @@
+services:
+  web:
+    build: { context: ., target: web }
+    ports: ["8080:8080"]
+  test:
+    build: { context: ., target: build }
+    command: dotnet test
+  verify:
+    build: { context: ., target: build }
+    command: node scripts/verify-all.mjs
