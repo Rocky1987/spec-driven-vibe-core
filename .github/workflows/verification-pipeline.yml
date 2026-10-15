@@ -1,0 +1,148 @@
+# 三道閘門驗證流水線（範本）
+# 標示「Phase N」的步驟依賴尚未建立的腳本，於該 Phase 實作。
+# 門檻數值一律讀取 quality-gates.yml（以 runner 內建的 yq 讀取），不在此處寫死。
+name: Verification Pipeline
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_VERSION: '9.0.x'
+
+jobs:
+  # ── 判斷這次變更屬於 QA（測試）還是 Dev（實作）─────────────────────
+  classify:
+    name: 🧭 Classify
+    runs-on: ubuntu-latest
+    outputs:
+      kind: ${{ steps.kind.outputs.kind }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - id: kind
+        env: # 以環境變數傳入，避免分支名稱造成指令注入
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.base_ref }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then echo "kind=full" >> "$GITHUB_OUTPUT"; exit 0; fi
+          if git diff --name-only "origin/$BASE...HEAD" | grep -qE '^tests/'; then
+            case "$BRANCH" in dev/*) echo "::error::Dev 分支不可變更 tests/"; exit 1;; esac
+            echo "kind=qa" >> "$GITHUB_OUTPUT"
+          else
+            echo "kind=dev" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ── 🔴 S0 · Red Gate（只在 QA 提交測試時執行）───────────────────────
+  stage0-red:
+    name: 🔴 S0 · Red Gate
+    needs: classify
+    if: needs.classify.outputs.kind == 'qa'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '${{ env.DOTNET_VERSION }}' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Anti-cheat scan（測試不得 Skip）
+        run: pipx run semgrep scan --config semgrep/ --error
+      - name: Rule traceability（每條 @rule ≥ 1 測試，案例種類齊全）
+        run: node scripts/ci/rule-traceability.mjs # Phase 1
+      - name: Build（0 錯誤、0 警告）
+        run: dotnet build -warnaserror
+      - name: Assert 100% red · 失敗原因皆為 NotImplementedException
+        run: node scripts/ci/assert-red.mjs # Phase 1：執行測試並解析 TRX
+
+  # ── 🟢 S1 · Green Gate ─────────────────────────────────────────────
+  stage1-green:
+    name: 🟢 S1 · Green Gate
+    needs: classify
+    if: needs.classify.outputs.kind != 'qa'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '${{ env.DOTNET_VERSION }}' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Format + build（0 警告）
+        run: |
+          dotnet format --verify-no-changes
+          dotnet build -warnaserror
+      - name: Tests · 單元 + 屬性 + MVC 整合（SQLite）
+        run: dotnet test --no-build --collect:"XPlat Code Coverage" --results-directory coverage
+      - name: Coverage gate（依 quality-gates.yml 的等級與路徑比對）
+        run: node scripts/ci/check-coverage.mjs coverage # Phase 1
+
+  # ── 🛡️ S2 · Guard Gate：防竄改 + 測試強度 ─────────────────────────
+  stage2-guard:
+    name: 🛡️ S2 · Guard Gate
+    needs: stage1-green
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '${{ env.DOTNET_VERSION }}' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Test lock（SHA-256 指紋 100% 相符）
+        run: node scripts/test-lock.mjs verify
+      - name: Protected paths（依分支前綴決定角色，變更不得越權）
+        if: github.event_name == 'pull_request'
+        env:
+          SDV_ROLE: ${{ startsWith(github.head_ref, 'spec/') && 'spec' || 'dev' }}
+          BASE: ${{ github.base_ref }}
+        run: node .claude/hooks/guard-tests.mjs --range "origin/$BASE...HEAD"
+      - name: Anti-reward-hacking scan（0 findings）
+        run: pipx run semgrep scan --config semgrep/ --error
+      - name: Property tests rerun（新的隨機 Seed）
+        run: dotnet test --filter "Kind=property"
+      - name: Mutation · L1 Domain
+        run: |
+          dotnet tool restore
+          dotnet stryker --config-file stryker-config.json \
+            --mutate "**/Domain/**/*.cs" \
+            --break-at "$(yq '.levels.L1.mutation.break' quality-gates.yml)"
+      - name: Mutation · L2 Services
+        if: hashFiles('src/**/Services/**/*.cs') != '' # Phase 2 建立 L2 後生效
+        run: |
+          dotnet stryker --config-file stryker-config.json \
+            --mutate "**/Services/**/*.cs" \
+            --break-at "$(yq '.levels.L2.mutation.break' quality-gates.yml)"
+
+  # ── 📋 閘門摘要（輸出到 Job Summary，可直接截圖）──────────────────
+  summary:
+    name: 📋 Gate Summary
+    if: always()
+    needs: [classify, stage0-red, stage1-green, stage2-guard]
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          S0: ${{ needs.stage0-red.result }}
+          S1: ${{ needs.stage1-green.result }}
+          S2: ${{ needs.stage2-guard.result }}
+        run: |
+          icon() { case "$1" in success) echo "✅";; skipped) echo "⏭️";; *) echo "❌";; esac; }
+          {
+            echo "## 🚦 Verification Gates"
+            echo
+            echo "| Gate | Result |"
+            echo "|---|---|"
+            echo "| 🔴 S0 · Red Gate | $(icon "$S0") $S0 |"
+            echo "| 🟢 S1 · Green Gate | $(icon "$S1") $S1 |"
+            echo "| 🛡️ S2 · Guard Gate | $(icon "$S2") $S2 |"
+          } >> "$GITHUB_STEP_SUMMARY"

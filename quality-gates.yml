@@ -1,0 +1,48 @@
+# quality-gates.yml — 所有量化門檻的唯一來源（Single Source of Truth）
+# 文件（docs/02、docs/05）與 CI 都從這裡讀取數值。
+# 本檔受 CODEOWNERS 保護：調降任何門檻都必須附上書面理由並經人工審核。
+# v1 只定義 L1、L2；L3、L4 的建議門檻見 docs/02 §4，正式導入時再加入。
+
+version: 1
+
+# ── 依難易度等級的門檻（paths 決定哪些程式碼屬於哪個等級）────────────
+levels:
+  L1:
+    paths: ["src/FlashSale.Web/Domain/**"]
+    coverage: { line: 95, branch: 90 }
+    mutation: { break: 80 }                       # Stryker 突變分數低於此值即失敗
+    no_coverage_mutants: 0                        # 無覆蓋突變體 = 死碼
+    property_tests: { min_per_rule: 1, min_iterations: 1000 }
+  L2:
+    paths: ["src/FlashSale.Web/Services/**"]
+    coverage: { line: 90, branch: 80 }
+    mutation: { break: 70 }
+    no_coverage_mutants: 0
+
+# ── Dev Agent 迭代預算（重試斷路器）──────────────────────────────────
+agent_budget:
+  max_turns: 40
+  max_same_failure: 3
+
+# ── 依閘門的門檻 ──────────────────────────────────────────────────
+stages:
+  s0_red:
+    rule_traceability_pct: 100
+    min_tests_per_rule: 1
+    min_cases_per_feature: { happy: 1, boundary: 2, error: 1 }
+    red_ratio_pct: 100
+    allowed_failure_kinds: [NotImplementedException]
+    compile_errors: 0
+  s1_green:
+    test_pass_rate_pct: 100
+    build_warnings: 0
+    format_violations: 0
+  s2_guard:
+    lock_hash_match: true
+    protected_path_changes: 0
+    anti_cheat_findings: 0
+    property_rerun_with_new_seed: true
+
+# ── 時間預算（分鐘）────────────────────────────────────────────────
+budgets:
+  pr_total_minutes: 10

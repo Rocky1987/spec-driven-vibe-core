@@ -1,0 +1,67 @@
+# anti-reward-hacking.yml — 反作弊靜態規則（S0 / S2，0 容忍）
+# 執行：semgrep scan --config semgrep/ --error
+# 規則是「活的」：每一筆新的作弊事件，都應評估能否寫成新規則加入此檔。
+
+rules:
+  # ── 規避覆蓋率與檢查 ─────────────────────────────────────────────
+  - id: sdv-coverage-exclusion
+    languages: [regex]
+    pattern-regex: '\[ExcludeFromCodeCoverage'
+    paths: { include: ["src/**"] }
+    message: 不得以覆蓋率排除規避驗證
+    severity: ERROR
+
+  - id: sdv-suppress-warning
+    languages: [regex]
+    pattern-regex: '#pragma\s+warning\s+disable|SuppressMessage\('
+    paths: { include: ["src/**"] }
+    message: 不得抑制編譯器或分析器警告
+    severity: ERROR
+
+  # ── 讓測試不執行 ───────────────────────────────────────────────
+  - id: sdv-skipped-test
+    languages: [regex]
+    pattern-regex: '\[(Fact|Theory)\([^)]*Skip\s*='
+    paths: { include: ["tests/**"] }
+    message: 測試不得被略過（Skip）
+    severity: ERROR
+
+  # ── 偵測測試環境並改變行為（典型 Reward Hacking）──────────────────
+  - id: sdv-test-environment-sniffing
+    languages: [regex]
+    pattern-regex: 'GetEnvironmentVariable\(\s*"(CI|GITHUB_ACTIONS|DOTNET_RUNNING_IN_CONTAINER)"|IsEnvironment\(\s*"Testing"\s*\)'
+    paths: { include: ["src/**"] }
+    message: 實作不得偵測測試或 CI 環境
+    severity: ERROR
+
+  # ── 吞掉例外 ─────────────────────────────────────────────────
+  - id: sdv-empty-catch
+    languages: [regex]
+    pattern-regex: 'catch\s*(\([^)]*\))?\s*\{\s*\}'
+    paths: { include: ["src/**"] }
+    message: 不得使用空的 catch 區塊吞掉例外
+    severity: ERROR
+
+  # ── 假性通過的測試基礎設施 ─────────────────────────────────────
+  - id: sdv-in-memory-database
+    languages: [regex]
+    pattern-regex: 'UseInMemoryDatabase\('
+    paths: { include: ["src/**", "tests/**"] }
+    message: 禁止 EF Core InMemory Provider，請使用 SQLite（v1）或與生產相同的資料庫
+    severity: ERROR
+
+  # ── 時間 ─────────────────────────────────────────────────────
+  - id: sdv-direct-clock
+    languages: [regex]
+    pattern-regex: '\bDateTime(Offset)?\.(Now|UtcNow)\b'
+    paths: { include: ["src/**"] }
+    message: 請透過注入的 TimeProvider 取得時間，測試才能控制
+    severity: ERROR
+
+  # ── CI 繞過 ─────────────────────────────────────────────────
+  - id: sdv-ci-bypass
+    languages: [regex]
+    pattern-regex: 'continue-on-error:\s*true|--no-verify|\|\|\s*true\s*$'
+    paths: { include: [".github/**"] }
+    message: CI 不得忽略失敗
+    severity: ERROR
