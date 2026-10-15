@@ -24,11 +24,11 @@
 | ✓ | # | 步驟 | 驗收項目 | 驗證方式 |
 |---|---|---|---|---|
 | [x] | B.1 | 1 規則 | 價格計算驗收規則定稿並合併 | `specs/flash-sale/price-calculation.feature` |
-| [ ] | B.2 | 2 測試 | agent 依規則寫測試與 NotImplemented 骨架，每條規則至少 1 個測試 | 規則與測試對照 |
-| [ ] | B.3 | 2 測試 | 測試先紅：全部失敗，且原因皆為 `NotImplementedException` | `dotnet test` 輸出 |
-| [ ] | B.4 | 2 測試 | 人看過測試並簽核，產生 `tests.lock.json` | `node scripts/test-lock.mjs verify` 通過 |
-| [ ] | B.5 | 3 實作 | agent 只改 `src/`，`dotnet test` 全數通過 | 測試輸出，`tests/` 無變更 |
-| [ ] | B.6 | 4 CI | PR 的 Gate Summary 全綠，含 Lock 相符 | Actions |
+| [x] | B.2 | 2 測試 | agent 依規則寫測試與 NotImplemented 骨架，每條規則至少 1 個測試 | PR #9，每條規則皆有測試（13 個方法、56 案例） |
+| [x] | B.3 | 2 測試 | 測試先紅：全部失敗，且原因皆為 `NotImplementedException` | PR #9 S0：56 失敗 0 通過，原因皆為 NotImplementedException |
+| [x] | B.4 | 2 測試 | 人看過測試並簽核，產生 `tests.lock.json` | `node scripts/test-lock.mjs verify` 通過 |
+| [x] | B.5 | 3 實作 | agent 只改 `src/`，`dotnet test` 全數通過 | PR #11，56 個測試全過，`tests/` 無變更 |
+| [x] | B.6 | 4 CI | PR 的 Gate Summary 全綠，含 Lock 相符 | PR #11 Gate Summary 全綠（S1、S2 通過） |
 
 ## C · 導入指南
 
