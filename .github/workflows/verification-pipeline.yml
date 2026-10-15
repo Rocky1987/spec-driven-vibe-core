@@ -1,5 +1,5 @@
-# 三道閘門驗證流水線（範本）
-# 標示「Phase N」的步驟依賴尚未建立的腳本，於該 Phase 實作。
+# 三道閘門驗證流水線
+# 標示「Phase N」的步驟依賴尚未建立的腳本／檔案，以 hashFiles 判斷：檔案出現後自動生效，不需再改本檔。
 # 門檻數值一律讀取 quality-gates.yml（以 runner 內建的 yq 讀取），不在此處寫死。
 name: Verification Pipeline
 
@@ -60,11 +60,13 @@ jobs:
       - name: Anti-cheat scan（測試不得 Skip）
         run: pipx run semgrep scan --config semgrep/ --error
       - name: Rule traceability（每條 @rule ≥ 1 測試，案例種類齊全）
-        run: node scripts/ci/rule-traceability.mjs # Phase 1
+        if: hashFiles('scripts/ci/rule-traceability.mjs') != '' # Phase 1
+        run: node scripts/ci/rule-traceability.mjs
       - name: Build（0 錯誤、0 警告）
         run: dotnet build -warnaserror
       - name: Assert 100% red · 失敗原因皆為 NotImplementedException
-        run: node scripts/ci/assert-red.mjs # Phase 1：執行測試並解析 TRX
+        if: hashFiles('scripts/ci/assert-red.mjs') != '' # Phase 1：執行測試並解析 TRX
+        run: node scripts/ci/assert-red.mjs
 
   # ── 🟢 S1 · Green Gate ─────────────────────────────────────────────
   stage1-green:
@@ -85,7 +87,8 @@ jobs:
       - name: Tests · 單元 + 屬性 + MVC 整合（SQLite）
         run: dotnet test --no-build --collect:"XPlat Code Coverage" --results-directory coverage
       - name: Coverage gate（依 quality-gates.yml 的等級與路徑比對）
-        run: node scripts/ci/check-coverage.mjs coverage # Phase 1
+        if: hashFiles('scripts/ci/check-coverage.mjs') != '' # Phase 1
+        run: node scripts/ci/check-coverage.mjs coverage
 
   # ── 🛡️ S2 · Guard Gate：防竄改 + 測試強度 ─────────────────────────
   stage2-guard:
@@ -100,6 +103,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
       - name: Test lock（SHA-256 指紋 100% 相符）
+        if: hashFiles('tests.lock.json') != '' # 第一次簽核鎖定後生效（Phase 1）
         run: node scripts/test-lock.mjs verify
       - name: Protected paths（依分支前綴決定角色，變更不得越權）
         if: github.event_name == 'pull_request'
@@ -112,13 +116,14 @@ jobs:
       - name: Property tests rerun（新的隨機 Seed）
         run: dotnet test --filter "Kind=property"
       - name: Mutation · L1 Domain
+        if: hashFiles('stryker-config.json') != '' # Phase 1
         run: |
           dotnet tool restore
           dotnet stryker --config-file stryker-config.json \
             --mutate "**/Domain/**/*.cs" \
             --break-at "$(yq '.levels.L1.mutation.break' quality-gates.yml)"
       - name: Mutation · L2 Services
-        if: hashFiles('src/**/Services/**/*.cs') != '' # Phase 2 建立 L2 後生效
+        if: hashFiles('src/**/Services/**/*.cs') != '' && hashFiles('stryker-config.json') != '' # Phase 2 建立 L2 後生效
         run: |
           dotnet stryker --config-file stryker-config.json \
             --mutate "**/Services/**/*.cs" \
