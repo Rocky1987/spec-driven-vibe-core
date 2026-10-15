@@ -1,183 +1,77 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/hero-dark.png">
-  <img alt="spec-driven-vibe-core — 讓 AI 盡情寫，讓測試說了算。規格是法律、測試是鎖、閘門是裁判。" src="assets/readme/hero-light.png">
-</picture>
+# spec-driven-vibe-core
 
-<p align="center">
-  <img alt="status" src="https://img.shields.io/badge/status-%F0%9F%9A%A7%20pilot%20v1-E4572E?style=flat-square">
-  <img alt="phase" src="https://img.shields.io/badge/phase-0%20%2F%203-0D1015?style=flat-square">
-  <img alt="stack" src="https://img.shields.io/badge/stack-.NET%209%20%C2%B7%20ASP.NET%20Core%20MVC%20%C2%B7%20Claude%20Code-0D1015?style=flat-square">
-</p>
+**讓 AI agent 日常開發時照 TDD 走：先有規則，再有測試，最後才有實作，由 CI 說了算。**
 
-<p align="center">
-  <b>以 TDD 驗證與約束 AI 所寫的程式碼</b><br>
-  人類定義規格 → 測試被簽核鎖定 → AI 盡情 Vibe Coding → 三道閘門說了算
-</p>
+.NET 9 · ASP.NET Core MVC · Claude Code · GitHub Actions
 
 ---
 
 ## 為什麼需要這個專案？
 
-AI Agent 寫程式的速度快得驚人。但當測試失敗時，它有兩條路可以走：**修正程式碼，或是修改測試**——而後者往往更「省力」。
+AI agent 寫程式很快，但測試失敗時它有兩條路：修實作，或改測試。後者更省力，這就是 **Reward Hacking**：改期望值、寫死回傳值、加 `Skip`、關掉警告。
 
-這不是 AI 的惡意，而是最佳化的本能，也就是 **Reward Hacking**。它會以各種形式出現：
+本專案用最小的做法擋住這件事：測試經人簽核後鎖定，CI 負責把關。
 
-- 🔓 直接修改測試的期望值
-- 🎯 依測試輸入寫死回傳值
-- 🙈 加上 `Skip`、`[ExcludeFromCodeCoverage]`、`#pragma warning disable`
-- 🧩 在 Mock 的世界裡全部通過，在真實資料庫上全部失敗
+## 四個步驟
 
-本專案是一個**企業導入前的前置專案（Pilot）**：用最小的規模，把這套設計模式的「模式、規格、概念實作」做完整，讓架構師與工程師能親手驗證。
+| 步驟 | 做什麼 | 誰 | CI 把關 |
+|---|---|---|---|
+| 1 規則 | 規劃文件寫驗收規則，每條有 ID | 人 | — |
+| 2 測試 | agent 依規則寫測試與 `NotImplemented` 骨架，人看過後鎖定 | agent + 人 | 🔴 紅燈 |
+| 3 實作 | agent 只改實作，測試失敗不可改測試 | agent | 🟢 綠燈 |
+| 4 完成 | 兩個燈都過才算完成 | CI | Gate Summary 全綠 |
 
-## 核心概念：3 × 3
+## CI 怎麼判斷
 
-| 三條鐵律 | 三層防線 | 三道閘門 |
-|---|---|---|
-| **規格是法律**<br/>只有人類能修改 `specs/` | **① Agent 層**<br/>權限 Deny ＋ PreToolUse Hook | **🔴 S0 Red**<br/>實作前測試 100% 失敗，且失敗原因皆為 `NotImplementedException` |
-| **測試是鎖**<br/>簽核後以 SHA-256 鎖定，Dev Agent 唯讀 | **② 提交層**<br/>Git pre-commit | **🟢 S1 Green**<br/>測試 100% 通過；L1 覆蓋率 Line ≥ 95%／Branch ≥ 90% |
-| **閘門是裁判**<br/>AI 說「完成了」不算 | **③ CI 層**<br/>Test Lock ＋ CODEOWNERS——**唯一權威** | **🛡️ S2 Guard**<br/>Lock 相符、反作弊掃描 0、突變分數 L1 ≥ 80% |
-
-① ② 讓作弊在本機就失敗並留下紀錄，③ 才是保證。完整門檻：[`quality-gates.yml`](templates/quality-gates.yml)
-
-**一次變更如何被檢查：**
+測試與實作各開一個 PR。CI 先看這個 PR 有沒有動到 `tests/`：
 
 ```mermaid
 flowchart TD
-    A["AI 想改檔案<br/>例如 Dev 想改 tests/"] --> L1{"① Agent 層<br/>權限 Deny ＋ PreToolUse Hook<br/>依 SDV_ROLE 判斷"}
-    L1 -->|不允許| X1["⛔ exit 2 擋下<br/>寫入 guard-events.jsonl"]
-    L1 -->|通過或被繞過| C["git add ＋ git commit"]
-    C --> L2{"② 提交層<br/>.githooks/pre-commit<br/>guard-tests.mjs --staged"}
-    L2 -->|不允許| X2["⛔ commit 被拒絕"]
-    L2 -->|通過或 --no-verify| P["git push ＋ 開 PR"]
-    P --> L3{"③ CI 層（唯一權威）<br/>S0 Red → S1 Green → S2 Guard<br/>Test Lock ＋ CODEOWNERS"}
-    L3 -->|任一閘門失敗| X3["⛔ PR 無法合併"]
-    L3 -->|三道全綠| H["👤 人類核准"] --> M["✅ Merge"]
-
-    R[("guard-tests.mjs<br/>角色 × 路徑 規則表")] -.共用.-> L1
-    R -.共用.-> L2
-    R -.共用.-> L3
+    PR["開 PR"] --> C{"Classify：<br/>有動到 tests/？"}
+    C -->|有：測試 PR| S0["🔴 S0 紅燈<br/>測試 100% 失敗<br/>原因皆為 NotImplementedException"]
+    C -->|沒有：實作 PR| S1["🟢 S1 綠燈<br/>格式、建置 0 警告、測試全過"]
+    S1 --> S2["🛡️ S2 防竄改<br/>測試鎖相符、反作弊掃描 0 筆"]
+    S0 --> G["📋 Gate Summary"]
+    S2 --> G
+    G -->|全綠| M["✅ 可合併"]
+    G -->|任一失敗| X["⛔ 無法合併"]
 ```
 
-三層讀同一份規則表，改一處全部生效。越往後越難繞過：① ② 在本機，③ 在 GitHub，AI 碰不到。
+- 測試 PR 沒有全紅：S0 失敗，不能合併。有測試一開始就綠，代表它沒驗到尚未實作的東西。
+- 實作 PR 沒有全綠，或測試被改過：S1／S2 失敗，不能合併。
+- `main` 要求 Gate Summary 必須綠，一律走 PR。
+- 分支名稱以 `dev/` 開頭卻動了 `tests/`：Classify 直接失敗。
 
-## 運作方式
+## 示範：價格計算
 
-```mermaid
-flowchart LR
-    H["👤 Spec Writer"] -->|specs/*.feature| QA["🧪 QA Agent<br/>測試 + 空殼"]
-    QA --> G0["🔴 S0"] --> R{"👤 人工簽核"}
-    R -->|退回| QA
-    R -->|通過| L["🔒 Test Lock"]
-    L --> D["⚡ Dev Agent<br/>只能寫 src/"]
-    D --> G1["🟢 S1"] --> G2["🛡️ S2"] --> M["✅ Merge"]
-```
+用「限量搶購價格計算」跑完整四步（規則 PRC-001 至 PRC-004）：
 
-寫測試的 QA Agent 與寫實作的 Dev Agent 使用**不同的角色設定、Session 與模型**，避免兩邊犯同一個錯。
+1. 規則：[`specs/flash-sale/price-calculation.feature`](specs/flash-sale/price-calculation.feature)
+2. 測試：[`tests/FlashSale.Tests/Domain/PriceCalculatorTests.cs`](tests/FlashSale.Tests/Domain/PriceCalculatorTests.cs)，56 個案例，先 100% 紅燈，人簽核後產生 `tests.lock.json`
+3. 實作：[`src/FlashSale.Web/Domain/PriceCalculator.cs`](src/FlashSale.Web/Domain/PriceCalculator.cs)，只改 `src/`，56 個測試全過
+4. CI：測試 PR（#9）S0 通過，實作 PR（#11）S1、S2 通過
 
-**這套設計在模擬什麼？** 真實團隊的分工制衡：
-
-| 真實團隊 | 本專案 | 刻意不能做 |
-|---|---|---|
-| PO／SA | 📝 Spec Agent：起草規格 | 不寫測試、不寫實作 |
-| 資深工程師（審稿） | 🔎 Reviewer Agent：挑規格的毛病 | 唯讀，不改規格 |
-| QA 工程師 | 🧪 QA Agent：寫測試與空殼 | 不寫實作、不改規格 |
-| 開發工程師 | ⚡ Dev Agent：讓測試通過 | 不碰測試、不碰規格 |
-| CI／Code Review | 🚦 三道閘門：決定能否合併 | 不受前四者影響 |
-| 主管／簽核者 | 👤 Approver（人）：核准規格與合併 | 不親自寫規格、測試、實作 |
-
-人類團隊靠職責與信任做到「不能自己出題、自己作答、自己打分」；AI 沒有這種默契，所以用權限、Hook 與 CI 強制做出來。詳見 [01 · §2.0](docs/01-technical-feasibility.md)。
-
-## v1 範圍
-
-| 範圍內 | 留到正式導入 |
-|---|---|
-| **L1** 價格計算：PBT、突變測試 | L3 跨服務：Webhook 冪等、契約測試 |
-| **L2** 庫存預留：SQLite、時間注入、MVC 整合測試 | L4 併發與非確定性 |
-| ASP.NET Core MVC（.NET 9）單一專案 | Holdout 測試庫、容器隔離、E2E、SAST |
-
-**刻意做小**：企業導入的第一步不該是大工程，而是用最小的成本證明概念成立。clone 下來 `dotnet test` 就能跑；想零安裝體驗，一行 Docker 指令也行（見下方「一鍵運行」）。
-
-## 快速建置：兩種方式擇一
-
-> 🚧 Phase 0 完成後可用。兩種方式跑的是**同一份程式與同一支驗證腳本**，結果一致。
-
-| | 🐳 方式 A：Docker | 💻 方式 B：本機 |
-|---|---|---|
-| 需要安裝 | Docker | .NET 9 SDK、Node.js 22+ |
-| 啟動 Demo | `docker compose up` | `dotnet run --project src/FlashSale.Web` |
-| 跑測試 | `docker compose run --rm test` | `dotnet test` |
-| 跑三道閘門 | `docker compose run --rm verify` | `node scripts/verify-all.mjs` |
-| Demo 網址 | http://localhost:8080 | http://localhost:5080 |
-| 適合 | 快速體驗、審閱者、不想裝環境 | 開發與修改、使用 Claude Code 護欄 |
-
-方式 B 另需 Stryker.NET（`dotnet tool restore`）與 Semgrep 才能跑完整的 S2；只想看 Demo 與測試的話不需要。
-
-這裡的 Docker 只是為了讓人零安裝重現結果，**不是**把 Agent 關進容器；容器隔離屬於正式導入。
-
-## 快速開始：安裝護欄
-
-護欄套件可以獨立用在任何專案：
+本機指令：
 
 ```bash
-cp -r templates/.claude templates/.githooks templates/.github templates/scripts templates/semgrep .
-cp templates/quality-gates.yml templates/.gitattributes .
-git config core.hooksPath .githooks
-
-# 以 Dev 角色啟動 Claude Code，試著叫它修改測試
-claude --settings .claude/roles/dev.settings.json
+dotnet format --verify-no-changes
+dotnet build -warnaserror
+dotnet test
+node scripts/test-lock.mjs verify
 ```
 
-詳細步驟與紅隊驗證：[templates/README.md](templates/README.md)
+## 導入到你的專案
 
-## 依角色閱讀
+見 [11 · 導入指南](docs/11-adoption-guide.md)：最輕量的做法只需要規則表、提示詞樣板、測試鎖與 CI。連 agent 都擋住的 hook 與角色設定是選用。
 
-| 你是 | 建議先讀 |
-|---|---|
-| 架構師 | [01 · 技術可行性](docs/01-technical-feasibility.md) → [02 · 難易度分級與導入路徑](docs/02-difficulty-grading.md) |
-| 工程師 | [05 · 三道閘門](docs/05-verification-pipeline.md) → [templates/](templates/) |
-| 技術主管 | [06 · 最沒把握的三件事](docs/06-top3-uncertainties.md) → [03 · 風險](docs/03-risks-and-unknowns.md) |
+## 誠實聲明：目前的限制
 
-<details>
-<summary>完整文件索引</summary>
+- **規格本身對不對，這套方法管不到。** 規則寫錯，測試和實作會一起錯。
+- **語意層級的作弊抓不到。** 例如測試寫得太弱，永遠通過。
+- **CI 一開始沒有檢查「全紅」。** S0 原本只掃描與建置，不跑測試，PR #9 在沒驗紅燈的情況下全綠；後來補上 `scripts/ci/assert-red.mjs` 才真的把關。
+- **同一個 PR 同時改 `tests/` 和 `src/`，目前不會被擋。** 它會被判為測試 PR，只跑 S0，不跑 `dotnet test`。
+- **`quality-gates.yml` 的屬性測試門檻尚未被 CI 執行**，只是設定值。
 
-| 文件 | 內容 |
-|---|---|
-| [00 · 執行總綱](docs/00-execution-roadmap.md) | 4 週計畫、每一步的完成定義與素材 |
-| [10 · 里程碑驗收總表](docs/10-milestone-checklist.md) | 各 Phase 驗收項目，開發時逐項打勾 |
-| [01 · 技術可行性](docs/01-technical-feasibility.md) | 雙代理隔離、三層防線、Spec-to-Test、PBT 與突變測試 |
-| [02 · 難易度分級](docs/02-difficulty-grading.md) | L1–L4 策略與正式導入路徑 |
-| [03 · 風險及未知數](docs/03-risks-and-unknowns.md) | 風險矩陣、重試斷路器、已知的未知數 |
-| [04 · 前置資源](docs/04-prerequisite-resources.md) | 護欄檔案、環境、工具鏈、角色重定義 |
-| [05 · 驗證流水線](docs/05-verification-pipeline.md) | 三道閘門的順序與量化驗收 |
-| [06 · 最沒把握的三件事](docs/06-top3-uncertainties.md) | 這套方法在哪裡會失敗 |
-| [07 · 視覺識別](docs/07-visual-identity.md) | 品牌、畫面規範、拍攝清單 |
-| [08 · 內容策略](docs/08-content-playbook.md) | LinkedIn／Threads／GitHub 發佈計畫 |
+## 進度
 
-</details>
-
-## Roadmap
-
-- [x] 規劃書、護欄範本、視覺識別
-- [ ] **Phase 0** · 方案骨架 ＋ 三層防線紅隊測試
-- [ ] **Phase 1** · L1 價格計算：完整跑通 Spec-to-Test
-- [ ] **Phase 2** · L2 庫存預留：SQLite ＋ 時間注入 ＋ MVC 整合測試
-- [ ] **Phase 3** · Pilot 報告 ＋ `v1.0.0`
-
-## 誠實聲明
-
-這套方法**無法**保證規格本身正確，也**無法**完全偵測語意層級的作弊。限制寫在 [docs/06](docs/06-top3-uncertainties.md)，Pilot 報告也會公開不利於本方法的數據。
-
----
-
-<details>
-<summary><b>English summary</b></summary>
-
-**spec-driven-vibe-core** is a pilot for constraining AI-generated code with TDD, built on ASP.NET Core MVC (.NET 9).
-
-- **Specs are law** — only humans edit `specs/` (Gherkin).
-- **Tests are locked** — after human sign-off, tests are fingerprinted (SHA-256) and read-only for the Dev Agent.
-- **Gates are the judge** — "done" means three automated gates are green: Red Gate (100% failing for the right reason), Green Gate (tests and coverage), Guard Gate (test lock, anti-reward-hacking scans, mutation score).
-
-Three layers of defense (Claude Code permissions + PreToolUse hook, git pre-commit, CI) keep the agent from editing tests. Only CI is authoritative; the other layers make cheating fail early and leave an audit trail. v1 deliberately covers only L1 (pure logic) and L2 (database and time); the project also publishes its own top three unsolved problems.
-
-</details>
+進度與驗收項目：[10 · 里程碑驗收總表](docs/10-milestone-checklist.md)。完整護欄版（四角色拆分、獨立審稿、突變測試）保存於標記 `v0.1-full`。
