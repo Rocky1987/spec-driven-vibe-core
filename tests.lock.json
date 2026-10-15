@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "algorithm": "sha256 (text files LF-normalized)",
+  "generatedAt": "2026-10-15T09:55:06.889Z",
+  "generatedBy": "DESKTOP-L2I506P\\rocky <decievemyself@gmail.com>",
+  "baseCommit": "39941f8e77fc414a52ad348651c395a1ba0a45a8",
+  "rootHash": "4892a44f138652ffb6f1732b5af58a25d8ae16313fc7e8931544728c76e162dd",
+  "files": {
+    "tests/FlashSale.Tests/Domain/PriceCalculatorTests.cs": "8f287965d478c07aa3587ed6af91af95e1883d77137f87f0c59dda394b4cb123",
+    "tests/FlashSale.Tests/FlashSale.Tests.csproj": "0c075421cd6211be24b00818bb947d3abba812331f939f4f1e9a910d7a035782"
+  }
+}
