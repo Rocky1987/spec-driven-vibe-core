@@ -46,7 +46,7 @@
 | Node.js | 22 LTS 以上 | Claude Code 與護欄腳本 |
 | Claude Code | 最新版 | 需支援 Hooks、Subagents、`--settings` |
 | Git | 2.40 以上 | `worktree`、`core.hooksPath` |
-| Docker | **不需要** | v1 使用 SQLite；正式導入改用 Testcontainers 時才需要 |
+| Docker | 選用（一鍵運行） | `docker compose up` 跑 Demo、`docker compose run --rm verify` 重現三道閘門，不必安裝 .NET SDK；日常開發與 `dotnet test` 不需要。正式導入改用 Testcontainers 時才成為必要 |
 | 硬體 | 一般開發筆電（建議 16 GB RAM） | 突變測試最吃資源，v1 規模下約數分鐘 |
 
 ### 2.2 CI

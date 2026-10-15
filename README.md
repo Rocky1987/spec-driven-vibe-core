@@ -61,7 +61,18 @@ flowchart LR
 | **L2** 庫存預留：SQLite、時間注入、MVC 整合測試 | L4 併發與非確定性 |
 | ASP.NET Core MVC（.NET 9）單一專案 | Holdout 測試庫、容器隔離、E2E、SAST |
 
-**刻意做小**：企業導入的第一步不該是大工程，而是用最小的成本證明概念成立。clone 下來不需要 Docker，`dotnet test` 就能跑。
+**刻意做小**：企業導入的第一步不該是大工程，而是用最小的成本證明概念成立。clone 下來 `dotnet test` 就能跑；想零安裝體驗，一行 Docker 指令也行（見下方「一鍵運行」）。
+
+## 一鍵運行（Docker）
+
+> 🚧 Phase 0 完成後可用。只需要 Docker，不必安裝 .NET SDK。
+
+```bash
+docker compose up                      # 啟動 Demo → http://localhost:8080
+docker compose run --rm verify         # 在容器內跑 S0／S1／S2，輸出 Gate Summary
+```
+
+這裡的 Docker 只是為了讓審閱者零安裝重現結果，**不是**把 Agent 關進容器；容器隔離屬於正式導入。
 
 ## 快速開始：安裝護欄
 
@@ -92,6 +103,7 @@ claude --settings .claude/roles/dev.settings.json
 | 文件 | 內容 |
 |---|---|
 | [00 · 執行總綱](docs/00-execution-roadmap.md) | 4 週計畫、每一步的完成定義與素材 |
+| [10 · 里程碑驗收總表](docs/10-milestone-checklist.md) | 各 Phase 驗收項目，開發時逐項打勾 |
 | [01 · 技術可行性](docs/01-technical-feasibility.md) | 雙代理隔離、三層防線、Spec-to-Test、PBT 與突變測試 |
 | [02 · 難易度分級](docs/02-difficulty-grading.md) | L1–L4 策略與正式導入路徑 |
 | [03 · 風險及未知數](docs/03-risks-and-unknowns.md) | 風險矩陣、重試斷路器、已知的未知數 |

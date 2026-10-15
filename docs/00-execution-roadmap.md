@@ -3,7 +3,7 @@
 > **專案主題**：以 TDD 為導向的 AI 開發設計模式——用「被鎖定的測試」驗證與約束 AI 所寫的程式碼。
 > **一句話定位**：*Let AI vibe. Let tests rule.* —— 讓 AI 盡情寫，讓測試說了算。
 
-本文件定義 v1 要做什麼、照什麼順序做、每一步的完成標準，以及每一步要同時產出的對外素材。
+本文件定義 v1 要做什麼、照什麼順序做、每一步的完成標準，以及每一步要同時產出的對外素材。開發時逐項勾選請用 [10 · 里程碑驗收總表](10-milestone-checklist.md)。
 
 ---
 
@@ -34,7 +34,8 @@ v1 是一個**企業導入前的前置專案（Pilot）**：用最小的規模�
 |---|---|
 | L1 純邏輯、L2 有狀態服務 ＋ 資料庫 | L3 跨服務（佇列、Webhook、契約）、L4 併發與非確定性 |
 | ASP.NET Core MVC 單一專案，Razor 處理畫面 | 前後端分離、SPA 框架 |
-| SQLite（真實的關聯式資料庫，免 Docker） | 與生產相同的資料庫 ＋ Testcontainers |
+| SQLite（真實的關聯式資料庫，測試本身免 Docker） | 與生產相同的資料庫 ＋ Testcontainers |
+| Docker 一鍵運行：`docker compose up` 跑 Demo、`docker compose run --rm verify` 重現三道閘門 | 把 Dev Agent 關進容器、`tests/` 唯讀掛載 |
 | PBT 隨機輸入防過擬合 | Holdout 私有測試庫 |
 | 三層防線 | 容器唯讀掛載（物理隔離） |
 | 三道閘門 | 整合／契約／E2E／SAST／效能閘門 |
@@ -53,6 +54,7 @@ v1 是一個**企業導入前的前置專案（Pilot）**：用最小的規模�
 | 驗證 | Stryker.NET（突變測試）、coverlet（覆蓋率）、Semgrep（反作弊規則） | |
 | 護欄 | Claude Code（Permissions、Hooks、Subagents、`--settings`）、Git Hook、Node.js 腳本 | Node.js 本來就是 Claude Code 的執行環境，不額外增加相依 |
 | CI | GitHub Actions | 公開 Repo 免費，v1 不需要任何 Secret |
+| 一鍵運行 | Docker（多階段 Dockerfile）＋ `compose.yml` | 讓審閱者不裝 .NET SDK 也能跑 Demo 與驗證；**不等於**容器隔離 Agent |
 
 > ⚠️ **.NET 9 支援期**：.NET 9 為 STS 版本，官方支援至 **2026-11-10**。v1 依需求採用 .NET 9；Pilot 結束後若要延續，將 `TargetFramework` 改為 `net10.0`（LTS）即可。示範程式碼不使用版本特有的 API，升級成本低。
 
@@ -92,6 +94,8 @@ spec-driven-vibe-core/
 │   ├── Services/                  #    L2 有狀態服務（庫存預留）
 │   ├── Data/                      #    EF Core + SQLite
 │   └── Controllers/ Views/        #    MVC 畫面
+├── Dockerfile  compose.yml        # 一鍵運行：web（Demo）與 verify（三道閘門）
+├── .dockerignore
 ├── FlashSale.sln
 ├── Directory.Build.props          # Nullable、TreatWarningsAsErrors（受保護）
 ├── stryker-config.json            # 突變測試設定（受保護）
@@ -130,6 +134,7 @@ gantt
 | 0.2 | 建立方案骨架：`dotnet new mvc`（`src/FlashSale.Web`）、`dotnet new xunit`（`tests/FlashSale.Tests`）、`Directory.Build.props` | `dotnet build` 0 警告 |
 | 0.3 | 安裝 `templates/`（見 [templates/README](../templates/README.md)），`git config core.hooksPath .githooks` | 檔案就位 |
 | 0.4 | CI 三道閘門先以空殼跑通 | Actions 全綠 |
+| 0.4a | 建立 `Dockerfile`（多階段：build／runtime／verify）、`compose.yml`、`.dockerignore`；CI 加 `docker build` 步驟 | `docker compose up` 可開啟 MVC 預設頁；CI 的 image build 綠燈 |
 | 0.5 | **紅隊測試**：以 Dev 角色啟動 Claude Code，要求它「修改測試讓它通過」，逐層驗證 | 見下表 |
 | 0.6 | README 與 Social Preview 上線 | GitHub 首頁正常顯示 |
 
@@ -180,12 +185,13 @@ gantt
 | 步驟 | 動作 |
 |---|---|
 | 3.1 | `main` 三道閘門全綠，打 `v1.0.0` Tag |
+| 3.1a | 在全新環境（只裝 Docker）驗證：`docker compose up` 開得到預約頁，`docker compose run --rm verify` 產出三道閘門全綠的 Gate Summary | 乾淨機器或 CI runner 實測，結果寫入 `evidence/docker-verify.md` |
 | 3.2 | 彙整 `evidence/` → `docs/09-pilot-report.md`：只放實測數據，包含不利數據 |
 | 3.3 | 報告附「正式導入建議」：下一步要補哪些能力（依 [02](02-difficulty-grading.md) §5 的路線） |
 | 3.4 | 錄製 1–2 分鐘 Demo ＋ 3 支短 GIF；README 定稿 |
 | 3.5 | LinkedIn #3 ＋ Carousel；Threads T7、T8；GitHub Release Note |
 
-- **DoD**：`v1.0.0` Release、Pilot 報告、三平台內容全部發出。
+- **DoD**：`v1.0.0` Release、Pilot 報告、三平台內容全部發出；Docker 兩個入口在乾淨環境實測通過。
 
 ---
 
@@ -259,4 +265,5 @@ cd ../sdv-dev && claude --settings .claude/roles/dev.settings.json
 | [06 · 最沒把握的三件事](06-top3-uncertainties.md) | 這套方法在哪裡會失敗 | 所有人 |
 | [07 · 視覺識別](07-visual-identity.md) | 品牌、畫面規範、拍攝清單 | 發佈用 |
 | [08 · 內容策略](08-content-playbook.md) | LinkedIn／Threads／GitHub 發佈計畫 | 發佈用 |
+| [10 · 里程碑驗收總表](10-milestone-checklist.md) | 各 Phase 的驗收項目，開發時逐項打勾 | 執行者 |
 | [`templates/`](../templates/) | 可安裝的護欄範本 | 工程師 |

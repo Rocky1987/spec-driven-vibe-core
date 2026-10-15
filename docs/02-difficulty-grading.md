@@ -44,7 +44,7 @@
 | Mock 邊界 | 只 Mock「架構邊界之外」的東西：第三方 API、郵件、時間 |
 | AI 典型失誤 | 用 `DateTime.Now` 讓測試無法控制、先查後改導致庫存為負、Migration 與 Model 不一致 |
 
-> **為什麼用 SQLite，而不是 EF InMemory？** InMemory Provider 不是關聯式資料庫：不檢查外鍵與唯一約束、沒有真正的交易，測試會在一個「比真實世界寬鬆」的環境裡通過。SQLite 是真正的關聯式資料庫，而且不需要 Docker，任何人 clone 下來就能跑。正式導入時，再換成與生產環境相同的資料庫（Testcontainers）。
+> **為什麼用 SQLite，而不是 EF InMemory？** InMemory Provider 不是關聯式資料庫：不檢查外鍵與唯一約束、沒有真正的交易，測試會在一個「比真實世界寬鬆」的環境裡通過。SQLite 是真正的關聯式資料庫，測試本身不需要 Docker，任何人 clone 下來 `dotnet test` 就能跑；Docker 只用在「一鍵運行」Demo 與驗證，是為了方便審閱者，不是測試的相依。正式導入時，再換成與生產環境相同的資料庫（Testcontainers）。
 
 > **為什麼禁止過度 Mock？** AI 很擅長寫出「Mock 回傳什麼就斷言什麼」的測試——這種測試永遠通過，卻什麼都沒驗證。
 
