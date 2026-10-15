@@ -63,16 +63,22 @@ flowchart LR
 
 **刻意做小**：企業導入的第一步不該是大工程，而是用最小的成本證明概念成立。clone 下來 `dotnet test` 就能跑；想零安裝體驗，一行 Docker 指令也行（見下方「一鍵運行」）。
 
-## 一鍵運行（Docker）
+## 快速建置：兩種方式擇一
 
-> 🚧 Phase 0 完成後可用。只需要 Docker，不必安裝 .NET SDK。
+> 🚧 Phase 0 完成後可用。兩種方式跑的是**同一份程式與同一支驗證腳本**，結果一致。
 
-```bash
-docker compose up                      # 啟動 Demo → http://localhost:8080
-docker compose run --rm verify         # 在容器內跑 S0／S1／S2，輸出 Gate Summary
-```
+| | 🐳 方式 A：Docker | 💻 方式 B：本機 |
+|---|---|---|
+| 需要安裝 | Docker | .NET 9 SDK、Node.js 22+ |
+| 啟動 Demo | `docker compose up` | `dotnet run --project src/FlashSale.Web` |
+| 跑測試 | `docker compose run --rm test` | `dotnet test` |
+| 跑三道閘門 | `docker compose run --rm verify` | `node scripts/verify-all.mjs` |
+| Demo 網址 | http://localhost:8080 | http://localhost:5080 |
+| 適合 | 快速體驗、審閱者、不想裝環境 | 開發與修改、使用 Claude Code 護欄 |
 
-這裡的 Docker 只是為了讓審閱者零安裝重現結果，**不是**把 Agent 關進容器；容器隔離屬於正式導入。
+方式 B 另需 Stryker.NET（`dotnet tool restore`）與 Semgrep 才能跑完整的 S2；只想看 Demo 與測試的話不需要。
+
+這裡的 Docker 只是為了讓人零安裝重現結果，**不是**把 Agent 關進容器；容器隔離屬於正式導入。
 
 ## 快速開始：安裝護欄
 

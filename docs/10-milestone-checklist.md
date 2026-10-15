@@ -8,10 +8,10 @@
 
 | Phase | 週 | 主題 | 版本標記 | 狀態 |
 |---|---|---|---|---|
-| P0 | 1 | 骨架、護欄、紅隊、Docker 骨架 | `v0.1.0` | ☐ |
+| P0 | 1 | 骨架、護欄、紅隊、雙建置方式骨架 | `v0.1.0` | ☐ |
 | P1 | 2 | L1 價格計算完整跑通 | `v0.2.0` | ☐ |
 | P2 | 3 | L2 庫存預留、資料庫與時間 | `v0.3.0` | ☐ |
-| P3 | 4 | 收斂、Docker 實測、發表 | `v1.0.0` | ☐ |
+| P3 | 4 | 收斂、雙方式實測、發表 | `v1.0.0` | ☐ |
 
 ## P0 · 骨架與護欄
 
@@ -21,7 +21,8 @@
 | [ ] | 0.2 | 方案可建置 | `dotnet build` 0 警告 | CI 紀錄 |
 | [ ] | 0.3 | `templates/` 已安裝到根目錄，`core.hooksPath` 已設定 | `git config core.hooksPath` 回傳 `.githooks` | — |
 | [ ] | 0.4 | CI 三道閘門空殼跑通 | Actions 全綠 | Actions 連結 |
-| [ ] | 0.4a | Dockerfile／compose.yml／.dockerignore 就位，CI 有 `docker build` | `docker compose up` 開得到 MVC 預設頁 | CI 紀錄 |
+| [ ] | 0.4a | 方式 A：Dockerfile／compose.yml（web、test、verify）／.dockerignore 就位，CI 有 `docker build` | `docker compose up` 開得到 MVC 預設頁 | CI 紀錄 |
+| [ ] | 0.4b | 方式 B：`scripts/verify-all.mjs` 可在本機與容器內共用；README 指令表與實際一致 | `dotnet run`、`dotnet test`、`node scripts/verify-all.mjs` 皆可執行 | — |
 | [ ] | 0.5a | 紅隊 ①：Edit 與 Bash 繞道改 `tests/` 被攔截 | Hook exit 2 | `evidence/guard-events.jsonl` |
 | [ ] | 0.5b | 紅隊 ②：Agent Session 提交測試變更被 pre-commit 拒絕 | 提交失敗 | `evidence/guardrail-redteam.md` |
 | [ ] | 0.5c | 紅隊 ③：含測試變更的 `dev/*` PR 無法合併 | Classify 失敗 ＋ Lock 不符 | PR 截圖 |
@@ -58,8 +59,9 @@
 | ✓ | # | 驗收項目 | 驗證方式 | 證據 |
 |---|---|---|---|---|
 | [ ] | 3.1 | `main` 三道閘門全綠，已打 `v1.0.0` | Actions ＋ Tag | — |
-| [ ] | 3.1a | **Docker 實測**：乾淨環境只裝 Docker，`docker compose up` 開得到預約頁 | 瀏覽 `http://localhost:8080` | `evidence/docker-verify.md` |
-| [ ] | 3.1b | **Docker 實測**：`docker compose run --rm verify` 輸出三道閘門全綠的 Gate Summary | 退出碼 0 | `evidence/docker-verify.md` |
+| [ ] | 3.1a | **方式 A 實測**（乾淨環境只裝 Docker）：`up` 開得到預約頁 `:8080`；`run --rm test` 全過；`run --rm verify` Gate Summary 全綠 | 退出碼 0 | `evidence/quickstart-verify.md` |
+| [ ] | 3.1b | **方式 B 實測**（乾淨環境只裝 .NET 9 ＋ Node.js）：`dotnet run` 開得到預約頁 `:5080`；`dotnet test` 全過；`node scripts/verify-all.mjs` Gate Summary 全綠 | 退出碼 0 | `evidence/quickstart-verify.md` |
+| [ ] | 3.1c | 兩種方式的結果一致（測試數、覆蓋率、突變分數） | 對照兩份 Gate Summary | `evidence/quickstart-verify.md` |
 | [ ] | 3.2 | Pilot 報告 `docs/09-pilot-report.md`，只放實測數據、含不利數據 | 每個數字可對應 `evidence/` | 報告 |
 | [ ] | 3.3 | 報告附「正式導入建議」 | 對照 [02 §5](02-difficulty-grading.md) | — |
 | [ ] | 3.4 | Demo 影片（1–2 分鐘）與 3 支 GIF；README 定稿；佔位符已全數替換 | [07 §10](07-visual-identity.md) 檢查清單 | `assets/` |
