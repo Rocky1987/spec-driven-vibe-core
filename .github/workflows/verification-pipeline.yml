@@ -143,6 +143,7 @@ jobs:
           S0: ${{ needs.stage0-red.result }}
           S1: ${{ needs.stage1-green.result }}
           S2: ${{ needs.stage2-guard.result }}
+          C: ${{ needs.classify.result }}
         run: |
           icon() { case "$1" in success) echo "✅";; skipped) echo "⏭️";; *) echo "❌";; esac; }
           {
@@ -154,3 +155,7 @@ jobs:
             echo "| 🟢 S1 · Green Gate | $(icon "$S1") $S1 |"
             echo "| 🛡️ S2 · Guard Gate | $(icon "$S2") $S2 |"
           } >> "$GITHUB_STEP_SUMMARY"
+          for r in "$C" "$S0" "$S1" "$S2"; do
+            case "$r" in failure|cancelled) exit 1;; esac
+          done
+
