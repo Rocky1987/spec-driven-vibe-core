@@ -1,6 +1,8 @@
 # 護欄紅隊紀錄 Guardrail Red-Team Log
 
-> 對應 `docs/10-milestone-checklist.md` 的 0.5a–0.5e。原始事件見 [`guard-events.jsonl`](guard-events.jsonl)。
+> 對應 `docs/10-milestone-checklist.md` 的 0.5a–0.5e。
+> 原始事件由 Hook 寫入本機 `evidence/guard-events.jsonl`。該檔屬於受保護路徑（`dev/*`、`spec/*` 分支的 PR 動它會被 S2 擋下，PR #5 即為實例），
+> 因此本檔以摘要方式存證，不在紅隊 PR 中提交原始檔。
 
 ## 0.5a · ① Agent 層：Edit 與 Bash 繞道改 `tests/`
 
