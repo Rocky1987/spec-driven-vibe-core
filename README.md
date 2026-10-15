@@ -39,6 +39,27 @@ AI Agent 寫程式的速度快得驚人。但當測試失敗時，它有兩條�
 
 ① ② 讓作弊在本機就失敗並留下紀錄，③ 才是保證。完整門檻：[`quality-gates.yml`](templates/quality-gates.yml)
 
+**一次變更如何被檢查：**
+
+```mermaid
+flowchart TD
+    A["AI 想改檔案<br/>例如 Dev 想改 tests/"] --> L1{"① Agent 層<br/>權限 Deny ＋ PreToolUse Hook<br/>依 SDV_ROLE 判斷"}
+    L1 -->|不允許| X1["⛔ exit 2 擋下<br/>寫入 guard-events.jsonl"]
+    L1 -->|通過或被繞過| C["git add ＋ git commit"]
+    C --> L2{"② 提交層<br/>.githooks/pre-commit<br/>guard-tests.mjs --staged"}
+    L2 -->|不允許| X2["⛔ commit 被拒絕"]
+    L2 -->|通過或 --no-verify| P["git push ＋ 開 PR"]
+    P --> L3{"③ CI 層（唯一權威）<br/>S0 Red → S1 Green → S2 Guard<br/>Test Lock ＋ CODEOWNERS"}
+    L3 -->|任一閘門失敗| X3["⛔ PR 無法合併"]
+    L3 -->|三道全綠| H["👤 人類核准"] --> M["✅ Merge"]
+
+    R[("guard-tests.mjs<br/>角色 × 路徑 規則表")] -.共用.-> L1
+    R -.共用.-> L2
+    R -.共用.-> L3
+```
+
+三層讀同一份規則表，改一處全部生效。越往後越難繞過：① ② 在本機，③ 在 GitHub，AI 碰不到。
+
 ## 運作方式
 
 ```mermaid
