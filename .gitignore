@@ -1,1 +1,6 @@
+bin/
+obj/
+TestResults/
+.vs/
+*.user
 gemini-code-promptplan.md

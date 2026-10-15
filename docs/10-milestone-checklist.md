@@ -18,7 +18,7 @@
 | ✓ | # | 驗收項目 | 驗證方式 | 證據 |
 |---|---|---|---|---|
 | [ ] | 0.1 | `main` 分支保護：Require status checks（`stage2-guard`），單人模式不勾 approvals | Settings → Branches | 截圖 |
-| [ ] | 0.2 | 方案可建置 | `dotnet build` 0 警告 | CI 紀錄 |
+| [x] | 0.2 | 方案可建置 | `dotnet build` 0 警告 | CI 紀錄 |
 | [ ] | 0.3 | `templates/` 已安裝到根目錄，`core.hooksPath` 已設定 | `git config core.hooksPath` 回傳 `.githooks` | — |
 | [ ] | 0.4 | CI 三道閘門空殼跑通 | Actions 全綠 | Actions 連結 |
 | [ ] | 0.4a | 方式 A：Dockerfile／compose.yml（web、test、verify）／.dockerignore 就位，CI 有 `docker build` | `docker compose up` 開得到 MVC 預設頁 | CI 紀錄 |
