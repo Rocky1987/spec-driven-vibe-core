@@ -28,7 +28,7 @@ cp -r templates/.claude templates/.githooks templates/.github templates/scripts 
 chmod +x .githooks/pre-commit
 git config core.hooksPath .githooks
 # 手動：將 templates/CLAUDE.project.md 的內容合併到 CLAUDE.md 最前面
-# 手動：將 .github/CODEOWNERS 中的 @YOUR_GITHUB_ID 換成你的帳號
+# 手動：將 .github/CODEOWNERS 中的 @Rocky1987 換成你的帳號
 ```
 
 ```powershell
@@ -60,4 +60,4 @@ claude --settings .claude/roles/dev.settings.json
 
 - **角色設定與 Subagent 的分工**：`.claude/roles/*.settings.json` 決定「能寫哪裡」（權限隔離）；`.claude/agents/*.md` 決定「怎麼思考、用哪個模型」（Context 隔離與模型多樣性）。兩者搭配使用。
 - **單一規則來源**：受保護路徑只定義在 `guard-tests.mjs`，Hook、pre-commit 與 CI 都呼叫同一支腳本，避免三份規則不同步。
-- **單人專案的 CODEOWNERS**：GitHub 不允許作者核准自己的 PR，請為 Agent 建立獨立帳號推送分支。
+- **單人專案的 CODEOWNERS**：GitHub 不允許作者核准自己的 PR，所以單人模式只要求 CI status checks（`stage2-guard`），不要求 approvals，也不需要第二個帳號；團隊導入時再啟用 Code Owner 審核。

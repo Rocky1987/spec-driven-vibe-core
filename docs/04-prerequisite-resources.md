@@ -79,8 +79,11 @@
 | 服務 | 用途 | 成本 |
 |---|---|---|
 | GitHub（公開 Repo） | 程式碼、Actions、CODEOWNERS、分支保護、Social Preview | 免費 |
-| Agent 專用 GitHub 帳號 | 單人專案時由它推送分支、開 PR，你以 Code Owner 身分審核 | 免費 |
 | Claude Code | QA／Dev Agent | 依方案；記錄每個任務的 Token 用量 |
+
+> **單人模式（v1）不需要第二個 GitHub 帳號。** 一律用自己的帳號，Agent 在 `dev/*` 分支工作、由你開 PR；Branch protection 只勾 *Require status checks*（`stage2-guard`），不勾 *Require approvals*（GitHub 不允許作者核准自己的 PR）。
+>
+> 這代表：個人專案沒有第二位簽核者，簽核由 CI 檢查加上作者本人完成，Repo 擁有者也可繞過保護。被約束的是 Agent，不是你。團隊導入時再啟用 *Require review from Code Owners*，補上真正的第二個人。
 
 ---
 

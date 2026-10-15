@@ -1,22 +1,25 @@
 # 防護層 ③ CI 層：驗證面的任何變更都必須由人類審核。
 # 搭配 Branch Protection：Require review from Code Owners。
 #
-# ⚠️ 單人專案注意：GitHub 不允許 PR 作者核准自己的 PR。
-#    請為 Agent 建立獨立的 GitHub 帳號（例如 sdv-agent-bot）負責推送分支與開 PR，
-#    由你本人以 Code Owner 身分審核。這同時讓「誰寫的程式碼」在 Git 歷史中一目了然。
+# 單人模式（v1 Pilot）：不需要第二個 GitHub 帳號。
+#   - 一律使用你自己的帳號；Agent 在 dev/* 分支工作，由你開 PR。
+#   - Branch protection 只勾「Require status checks to pass」（必須通過 stage2-guard），
+#     不勾「Require approvals」。GitHub 不允許作者核准自己的 PR，勾了會把自己鎖住。
+#   - 此檔在這種設定下不強制核准，僅標示受保護路徑；真正的把關是 CI 的 Test Lock 與受保護路徑檢查。
+# 團隊模式：由第二位 Code Owner 審核時，再勾「Require review from Code Owners」。
 #
-# 將 @YOUR_GITHUB_ID 替換為你的帳號或團隊（例如 @org/test-reviewers）。
+# 將 @Rocky1987 替換為你的帳號或團隊（例如 @org/test-reviewers）。
 
-/specs/                     @YOUR_GITHUB_ID
-/tests/                     @YOUR_GITHUB_ID
-/tests.lock.json            @YOUR_GITHUB_ID
-/quality-gates.yml          @YOUR_GITHUB_ID
-/semgrep/                   @YOUR_GITHUB_ID
-/scripts/test-lock.mjs      @YOUR_GITHUB_ID
-/.github/                   @YOUR_GITHUB_ID
-/.claude/                   @YOUR_GITHUB_ID
-/.githooks/                 @YOUR_GITHUB_ID
-/CLAUDE.md                  @YOUR_GITHUB_ID
-**/stryker-config.json      @YOUR_GITHUB_ID
-**/*.runsettings            @YOUR_GITHUB_ID
-**/Directory.Build.props    @YOUR_GITHUB_ID
+/specs/                     @Rocky1987
+/tests/                     @Rocky1987
+/tests.lock.json            @Rocky1987
+/quality-gates.yml          @Rocky1987
+/semgrep/                   @Rocky1987
+/scripts/test-lock.mjs      @Rocky1987
+/.github/                   @Rocky1987
+/.claude/                   @Rocky1987
+/.githooks/                 @Rocky1987
+/CLAUDE.md                  @Rocky1987
+**/stryker-config.json      @Rocky1987
+**/*.runsettings            @Rocky1987
+**/Directory.Build.props    @Rocky1987
