@@ -92,7 +92,6 @@ jobs:
       - name: Docker build（方式 A 可重現）
         run: docker compose build
 
-
   # ── 🛡️ S2 · Guard Gate：防竄改 + 測試強度 ─────────────────────────
   stage2-guard:
     name: 🛡️ S2 · Guard Gate
